@@ -24,16 +24,12 @@ export default {
 		} catch (e: any) {
 			console.log(e.message);
 		}
-		try {
-			await message.forward("md_albin_hossain@hotmail.com");
-		} catch (e: any) {
-			console.log(e.message);
-		}
+		
 		try {
 			const db = env.DB;
 			const buffer = await streamToBuffer(message.raw);
 			const parsed = await simpleParser(buffer);
-			const results = await saveMessage(db, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.html));
+			const results = await saveMessage(db, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.text||" "));
 			console.log(results);
 		} catch (e: any) {
 			console.log(e.message);
