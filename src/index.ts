@@ -1,35 +1,19 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { simpleParser } from 'mailparser';
 
 export default {
 	async email(message, env, ctx) {
-		if(message.to.includes("test@albin.com.bd")){
-			try {
-				const db = env.DB;
-				const reader = message.raw.getReader();
-				let result = '';
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-					result += new TextDecoder().decode(value);
-				}
-				const results = await saveMessage(db, result);
-				console.log(results);
-			} catch (e: any) {
-				console.log(e.message);
-			}
-			return;
-		}
+		// if (message.to.includes("test@albin.com.bd")) {
+		// 	try {
+		// 		const db = env.DB;
+		// 		const buffer = await streamToBuffer(message.raw);
+		// 		const parsed = await simpleParser(buffer);
+		// 		const results = await saveMessage(db, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + parsed.text + "\n" + (parsed.html));
+		// 		console.log(results);
+		// 	} catch (e: any) {
+		// 		console.log(e.message);
+		// 	}
+		// 	return;
+		// }
 		try {
 			await message.forward("md_albin_hossain@zohomail.com");
 		} catch (e: any) {
@@ -45,7 +29,15 @@ export default {
 		} catch (e: any) {
 			console.log(e.message);
 		}
-
+		try {
+			const db = env.DB;
+			const buffer = await streamToBuffer(message.raw);
+			const parsed = await simpleParser(buffer);
+			const results = await saveMessage(db, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.html));
+			console.log(results);
+		} catch (e: any) {
+			console.log(e.message);
+		}
 	},
 
 	async fetch(request, env, ctx): Promise<Response> {
@@ -64,4 +56,15 @@ async function saveMessage(db: D1Database, message: String) {
 		.run();
 
 	return results;
+};
+
+async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
+	const reader = stream.getReader();
+	const chunks = [];
+	while (true) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		chunks.push(value);
+	}
+	return Buffer.concat(chunks.map(chunk => Buffer.from(chunk)));
 };

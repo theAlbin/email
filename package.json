@@ -12,8 +12,12 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.5.2",
     "@cloudflare/workers-types": "^4.20241230.0",
+    "@types/mailparser": "^3.4.5",
     "typescript": "^5.5.2",
     "vitest": "2.1.8",
     "wrangler": "^3.60.3"
+  },
+  "dependencies": {
+    "mailparser": "^3.7.2"
   }
 }
