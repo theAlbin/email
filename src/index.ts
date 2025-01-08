@@ -14,11 +14,11 @@ export default {
 		// 	}
 		// 	return;
 		// }
-		try {
-			await message.forward("md_albin_hossain@zohomail.com");
-		} catch (e: any) {
-			console.log(e.message);
-		}
+		// try {
+		// 	await message.forward("md_albin_hossain@zohomail.com");
+		// } catch (e: any) {
+		// 	console.log(e.message);
+		// }
 		try {
 			await message.forward("md.albin.hossain@icloud.com");
 		} catch (e: any) {
