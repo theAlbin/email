@@ -1,29 +1,18 @@
 export default {
 	async email(message, env, ctx) {
 		if (message.to.includes("test@albin.com.bd")) {
-
-			const key = Math.random().toString(36).substring(7);
-			await env.EMAIL.put(key, await streamToArrayBuffer(message.raw, message.rawSize), {
-				httpMetadata: message.headers,
-			});
-
-			const parsed = await streamToString(message.raw);
-			const results = await saveMessage(env.DB, parsed + "\n" + JSON.stringify(message.headers));
-			console.log(results);
+			await saveEmail(message, env);
 
 			return;
 		}
 		try {
-			await message.forward("md.albin.hossain@icloud.com");
+			saveEmail(message, env);
 		} catch (e: any) {
 			console.log(e.message);
 		}
 
 		try {
-			const db = env.DB;
-			const parsed = await streamToString(message.raw);
-			const results = await saveMessage(db, parsed + "\n" + JSON.stringify(message.headers));
-			console.log(results);
+			await message.forward("md.albin.hossain@icloud.com");
 		} catch (e: any) {
 			console.log(e.message);
 		}
@@ -36,16 +25,12 @@ export default {
 	}
 } satisfies ExportedHandler<Env>;
 
-async function saveMessage(db: D1Database, message: String) {
-	const query = 'INSERT INTO FormResponses(form_name, data) VALUES (?, ?)';
-
-	const results = await db
-		.prepare(query)
-		.bind("EmailMessage", message)
-		.run();
-
-	return results;
-};
+async function saveEmail(message: ForwardableEmailMessage, env: Env) {
+	const rawEmail = await streamToArrayBuffer(message.raw, message.rawSize);
+	await env.EMAIL.put(`${Date.now()} ${message.from}.eml`, rawEmail, {
+		httpMetadata: message.headers,
+	});
+}
 
 async function streamToArrayBuffer(stream: ReadableStream<Uint8Array>, streamSize: number): Promise<Uint8Array> {
 	let result = new Uint8Array(streamSize);
@@ -60,9 +45,4 @@ async function streamToArrayBuffer(stream: ReadableStream<Uint8Array>, streamSiz
 		bytesRead += value.length;
 	}
 	return result;
-}
-
-
-async function streamToString(stream: ReadableStream<Uint8Array>): Promise<string> {
-	return await new Response(stream).text();
 }
