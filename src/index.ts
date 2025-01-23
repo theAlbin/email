@@ -3,23 +3,21 @@ import { simpleParser } from 'mailparser';
 export default {
 	async email(message, env, ctx) {
 		if (message.to.includes("test@albin.com.bd")) {
+			const key = Math.random().toString(36).substring(7);
+			await env.EMAIL.put(key, (new Response(message.raw)).body, {
+				httpMetadata: message.headers,
+
+			});
 			
-			try {
+			
+			const parsed = await streamToString(message.raw);
+			const results = await saveMessage(env.DB, parsed+ "\n" + JSON.stringify(message.headers));
+			console.log(results);
 
-				const key = Math.random().toString(36).substring(7);   
-				await env.EMAIL.put(key , message.raw, {
-					httpMetadata: message.headers,
-				  });
-				// const buffer = await streamToBuffer(message.raw);
-				// const parsed = await simpleParser(buffer);
-				// const results = await saveMessage(env.DB, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.text || " "));
-
-				const parsed = await streamToString(message.raw);
-				const results = await saveMessage(env.DB, parsed);
-				console.log(results);
-			} catch (e: any) {
-				console.log(e.message);
-			}
+			// const buffer = await streamToBuffer(message.raw);
+			// const parsed = await simpleParser(buffer);
+			// const results = await saveMessage(env.DB, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.text || " "));
+			
 			return;
 		}
 		try {
