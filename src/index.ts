@@ -3,10 +3,11 @@ import { simpleParser } from 'mailparser';
 export default {
 	async email(message, env, ctx) {
 		if (message.to.includes("test@albin.com.bd")) {
-			const key = Math.random().toString(36).substring(7);   
-			await env.EMAIL.put(key , message.raw);
-
+			
 			try {
+				
+				const key = Math.random().toString(36).substring(7);   
+				await env.EMAIL.put(key , message.raw);
 				// const buffer = await streamToBuffer(message.raw);
 				// const parsed = await simpleParser(buffer);
 				// const results = await saveMessage(env.DB, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.text || " "));
