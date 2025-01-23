@@ -3,7 +3,8 @@ import { simpleParser } from 'mailparser';
 export default {
 	async email(message, env, ctx) {
 		if (message.to.includes("test@albin.com.bd")) {
-			await env.EMAIL.put(message.from +'-'+ Date.now.toString(), message.raw);
+			const key = Math.random().toString(36).substring(7);   
+			await env.EMAIL.put(key , message.raw);
 
 			try {
 				// const buffer = await streamToBuffer(message.raw);
