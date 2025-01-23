@@ -1,33 +1,32 @@
 export default {
 	async email(message, env, ctx) {
-		if (message.to.includes("test@albin.com.bd")) {
-			await saveEmail(message, env);
-
-			return;
-		}
 		try {
 			saveEmail(message, env);
 		} catch (e: any) {
 			console.log(e.message);
 		}
 
-		try {
-			await message.forward("md.albin.hossain@icloud.com");
-		} catch (e: any) {
-			console.log(e.message);
-		}
+		// try {
+		// 	await message.forward("md.albin.hossain@icloud.com");
+		// } catch (e: any) {
+		// 	console.log(e.message);
+		// }
 	},
 
 	async fetch(request, env, ctx): Promise<Response> {
-		const destinationURL = "https://albin.com.bd";
-		const statusCode = 301;
-		return Response.redirect(destinationURL, statusCode);
+		return redirectToHome();
 	}
 } satisfies ExportedHandler<Env>;
 
+function redirectToHome() {
+	const destinationURL = "https://albin.com.bd";
+	const statusCode = 301;
+	return Response.redirect(destinationURL, statusCode);
+}
+
 async function saveEmail(message: ForwardableEmailMessage, env: Env) {
 	const rawEmail = await streamToArrayBuffer(message.raw, message.rawSize);
-	await env.EMAIL.put(`${Date.now()} ${message.from}.eml`, rawEmail, {
+	await env.EMAIL.put(`raw-email-${message.from}-${Date.now()}.eml`, rawEmail, {
 		httpMetadata: message.headers,
 	});
 }
