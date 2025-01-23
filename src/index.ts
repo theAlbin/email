@@ -5,9 +5,11 @@ export default {
 		if (message.to.includes("test@albin.com.bd")) {
 			
 			try {
-				
+
 				const key = Math.random().toString(36).substring(7);   
-				await env.EMAIL.put(key , message.raw);
+				await env.EMAIL.put(key , message.raw, {
+					httpMetadata: message.headers,
+				  });
 				// const buffer = await streamToBuffer(message.raw);
 				// const parsed = await simpleParser(buffer);
 				// const results = await saveMessage(env.DB, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.text || " "));
