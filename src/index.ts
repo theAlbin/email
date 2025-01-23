@@ -1,17 +1,15 @@
-import { simpleParser } from 'mailparser';
-
 export default {
 	async email(message, env, ctx) {
 		if (message.to.includes("test@albin.com.bd")) {
+
 			const key = Math.random().toString(36).substring(7);
-			await env.EMAIL.put(key, new Response(message.raw).body, { httpMetadata: message.headers, });
+			await env.EMAIL.put(key, await streamToArrayBuffer(message.raw, message.rawSize), {
+				httpMetadata: message.headers,
+			});
+
 			const parsed = await streamToString(message.raw);
 			const results = await saveMessage(env.DB, parsed + "\n" + JSON.stringify(message.headers));
 			console.log(results);
-
-			// const buffer = await streamToBuffer(message.raw);
-			// const parsed = await simpleParser(buffer);
-			// const results = await saveMessage(env.DB, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.text || " "));
 
 			return;
 		}
@@ -23,9 +21,8 @@ export default {
 
 		try {
 			const db = env.DB;
-			const buffer = await streamToBuffer(message.raw);
-			const parsed = await simpleParser(buffer);
-			const results = await saveMessage(db, parsed.subject + "\n" + parsed.from?.text + "\n" + parsed.to + "\n" + (parsed.html || parsed.text || " "));
+			const parsed = await streamToString(message.raw);
+			const results = await saveMessage(db, parsed + "\n" + JSON.stringify(message.headers));
 			console.log(results);
 		} catch (e: any) {
 			console.log(e.message);
@@ -50,16 +47,20 @@ async function saveMessage(db: D1Database, message: String) {
 	return results;
 };
 
-async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
+async function streamToArrayBuffer(stream: ReadableStream<Uint8Array>, streamSize: number): Promise<Uint8Array> {
+	let result = new Uint8Array(streamSize);
+	let bytesRead = 0;
 	const reader = stream.getReader();
-	const chunks = [];
 	while (true) {
 		const { done, value } = await reader.read();
-		if (done) break;
-		chunks.push(value);
+		if (done) {
+			break;
+		}
+		result.set(value, bytesRead);
+		bytesRead += value.length;
 	}
-	return Buffer.concat(chunks.map(chunk => Buffer.from(chunk)));
-};
+	return result;
+}
 
 
 async function streamToString(stream: ReadableStream<Uint8Array>): Promise<string> {
