@@ -1,16 +1,12 @@
 export default {
 	async email(message, env, ctx) {
-		try {
-			saveEmail(message, env);
-		} catch (e: any) {
-			console.log(e.message);
-		}
-
 		// try {
 		// 	await message.forward("md.albin.hossain@icloud.com");
 		// } catch (e: any) {
 		// 	console.log(e.message);
 		// }
+		
+		await saveEmail(message, env);
 	},
 
 	async fetch(request, env, ctx): Promise<Response> {
