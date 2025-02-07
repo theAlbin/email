@@ -15,32 +15,51 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 
 	const messageId = email.messageId
 	const subject = email.subject || ''
-	const date = email.date || new Date().toISOString()
-	const from = JSON.stringify(email.from)
-	const sender = JSON.stringify(email.sender)
+	const date = email.date || new Date().toISOString() || ''
+	const from = JSON.stringify(email.from) || ''
+	const sender = JSON.stringify(email.sender) || ''
 	const html = email.html || ''
 	const text = email.text || ''
 	const inReplyTo = email.inReplyTo || ''
 	const references = email.references || ''
 	const deliveredTo = email.deliveredTo || ''
 	const returnPath = email.returnPath || ''
-	const headers = JSON.stringify(email.headers)
-	const to = JSON.stringify(email.to)
-	const cc = JSON.stringify(email.cc)
-	const bcc = JSON.stringify(email.bcc)
-	const replyTo = JSON.stringify(email.replyTo)
-	const attachments = JSON.stringify(email.attachments)
+	const headers = JSON.stringify(email.headers) || ''
+	const to = JSON.stringify(email.to) || ''
+	const cc = JSON.stringify(email.cc) || ''
+	const bcc = JSON.stringify(email.bcc) || ''
+	const replyTo = JSON.stringify(email.replyTo) || ''
+	const attachments = JSON.stringify(email.attachments) || ''
 
-	await env.EMAIL_DB.prepare(
-		`INSERT INTO messages(message_id, "subject", "date", "from", sender, html) VALUES (?, ?, ?, ?, ?, ?)`).bind(
+
+	const query = `INSERT INTO messages (message_id, "subject", "date", "from", sender, html, text, in_reply_to, "references", delivered_to, return_path, headers, "to", cc, bcc, reply_to, attachments,) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	try {
+		
+	await env.EMAIL_DB.prepare(query
+		).bind(
 			messageId,
 			subject,
 			date,
 			from,
 			sender,
 			html,
+			text,
+			inReplyTo,
+			references,
+			deliveredTo,
+			returnPath,
+			headers,
+			to,
+			cc,
+			bcc,
+			replyTo,
+			attachments
 		).run()
-
+	}
+	catch (e) {
+		await env.EMAIL_DB.prepare("Insert into messages(message_id, html) VALUES (?, ?)").bind(messageId, JSON.stringify(email)).run()
+	}
 
 	email.attachments.forEach(async attachment => {
 		await env.EMAIL_BUCKET.put(`attachments/${email.messageId}/${attachment.filename}`, attachment.content);
