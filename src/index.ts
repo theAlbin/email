@@ -32,8 +32,12 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 	const attachments = JSON.stringify(email.attachments)
 
 	await env.EMAIL_DB.prepare(
-		`INSERT INTO messages(message_id, html) VALUES (?, ?)`).bind(
+		`INSERT INTO messages(message_id, "subject", "date", "from", sender, html) VALUES (?, ?, ?, ?, ?, ?)`).bind(
 			messageId,
+			subject,
+			date,
+			from,
+			sender,
 			html,
 		).run()
 
