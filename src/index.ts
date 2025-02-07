@@ -29,16 +29,6 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 	const cc = JSON.stringify(email.cc) || ''
 	const bcc = JSON.stringify(email.bcc) || ''
 	const replyTo = JSON.stringify(email.replyTo) || ''
-	const attachments = JSON.stringify(email.attachments.map(function (attachment) {
-		return {
-			attachmentId: attachment.contentId,
-			filename: attachment.filename,
-			contentType: attachment.mimeType,
-			disposition: attachment.disposition,
-			related: attachment.related,
-		}
-
-	})) || ''
 
 	const query = `INSERT INTO messages (message_id, "subject", "date", "from", sender, html, text, in_reply_to, "references", delivered_to, return_path, headers, "to", cc, bcc, reply_to, attachments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
@@ -60,10 +50,13 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 		cc,
 		bcc,
 		replyTo,
-		attachments
+		email.attachments.length.toString()
 	).run()
 
-	email.attachments.forEach(async attachment => {
-		await env.EMAIL_BUCKET.put(`attachments/${email.messageId}/${attachment.contentId}`, attachment.content);
-	})
+	if (email.attachments) {
+		for (const attachment of email.attachments) {
+			const attachmentKey = `${messageId}/${attachment.filename}`
+			await env.EMAIL_BUCKET.put(attachmentKey, attachment.content)
+		}
+	}
 }
