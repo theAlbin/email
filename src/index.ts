@@ -1,43 +1,41 @@
+import * as PostalMime from 'postal-mime'
+
 export default {
 	async email(message, env, ctx) {
-		// try {
-		// 	await message.forward("md.albin.hossain@icloud.com");
-		// } catch (e: any) {
-		// 	console.log(e.message);
-		// }
-		
-		await saveEmail(message, env);
+		await handleEmail(message, env);
 	},
-
-	async fetch(request, env, ctx): Promise<Response> {
-		return redirectToHome();
-	}
 } satisfies ExportedHandler<Env>;
 
-function redirectToHome() {
-	const destinationURL = "https://albin.com.bd";
-	const statusCode = 301;
-	return Response.redirect(destinationURL, statusCode);
-}
+async function handleEmail(message: ForwardableEmailMessage, env: Env) {
+	const parser = new PostalMime.default()
 
-async function saveEmail(message: ForwardableEmailMessage, env: Env) {
-	const rawEmail = await streamToArrayBuffer(message.raw, message.rawSize);
-	await env.EMAIL.put(`raw-email-${message.from}-${Date.now()}.eml`, rawEmail, {
-		httpMetadata: message.headers,
-	});
-}
+	const rawEmail = new Response(message.raw)
 
-async function streamToArrayBuffer(stream: ReadableStream<Uint8Array>, streamSize: number): Promise<Uint8Array> {
-	let result = new Uint8Array(streamSize);
-	let bytesRead = 0;
-	const reader = stream.getReader();
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done) {
-			break;
-		}
-		result.set(value, bytesRead);
-		bytesRead += value.length;
-	}
-	return result;
+	const email = await parser.parse(await rawEmail.arrayBuffer())
+
+	await env.EMAIL_DB.prepare(
+		`INSERT INTO messages (message_id, subject, date, "from", sender, html, text, in_reply_to, "references", delivered_to, return_path, headers, "to", cc, bcc, reply_to, attachments,) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+			email.messageId,
+			email.subject,
+			email.date,
+			JSON.stringify(email.from),
+			JSON.stringify(email.sender),
+			email.html,
+			email.text,
+			email.inReplyTo,
+			email.references,
+			email.deliveredTo,
+			email.returnPath,
+			JSON.stringify(email.headers),
+			JSON.stringify(email.to),
+			JSON.stringify(email.cc),
+			JSON.stringify(email.bcc),
+			JSON.stringify(email.replyTo),
+			JSON.stringify(email.attachments),
+		).run()
+
+
+	email.attachments.forEach(async attachment => {
+		await env.EMAIL_BUCKET.put(`attachments/${email.messageId}/${attachment.filename}`, attachment.content);
+	})
 }
