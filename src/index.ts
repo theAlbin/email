@@ -13,25 +13,43 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 
 	const email = await parser.parse(await rawEmail.arrayBuffer())
 
+	const messageId = email.messageId
+	const subject = email.subject || ''
+	const date = email.date || new Date().toISOString()
+	const from = JSON.stringify(email.from)
+	const sender = JSON.stringify(email.sender)
+	const html = email.html || ''
+	const text = email.text || ''
+	const inReplyTo = email.inReplyTo || ''
+	const references = email.references || ''
+	const deliveredTo = email.deliveredTo || ''
+	const returnPath = email.returnPath || ''
+	const headers = JSON.stringify(email.headers)
+	const to = JSON.stringify(email.to)
+	const cc = JSON.stringify(email.cc)
+	const bcc = JSON.stringify(email.bcc)
+	const replyTo = JSON.stringify(email.replyTo)
+	const attachments = JSON.stringify(email.attachments)
+
 	await env.EMAIL_DB.prepare(
 		`INSERT INTO messages (message_id, subject, date, "from", sender, html, text, in_reply_to, "references", delivered_to, return_path, headers, "to", cc, bcc, reply_to, attachments,) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-			email.messageId,
-			email.subject || '',
-			email.date || new Date().toISOString(),
-			JSON.stringify(email.from),
-			JSON.stringify(email.sender),
-			email.html || '',
-			email.text || '',
-			email.inReplyTo || '',
-			email.references || '',
-			email.deliveredTo || '',
-			email.returnPath || '',
-			JSON.stringify(email.headers),
-			JSON.stringify(email.to),
-			JSON.stringify(email.cc),
-			JSON.stringify(email.bcc),
-			JSON.stringify(email.replyTo),
-			JSON.stringify(email.attachments),
+			messageId,
+			subject,
+			date,
+			from,
+			sender,
+			html,
+			text,
+			inReplyTo,
+			references,
+			deliveredTo,
+			returnPath,
+			headers,
+			to,
+			cc,
+			bcc,
+			replyTo,
+			attachments
 		).run()
 
 
