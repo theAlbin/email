@@ -29,8 +29,7 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 	const cc = JSON.stringify(email.cc) || ''
 	const bcc = JSON.stringify(email.bcc) || ''
 	const replyTo = JSON.stringify(email.replyTo) || ''
-	const attachments = JSON.stringify(email.attachments) || ''
-
+	const attachments = email.attachments.length || ''
 
 	const query = `INSERT INTO messages (message_id, "subject", "date", "from", sender, html, text, in_reply_to, "references", delivered_to, return_path, headers, "to", cc, bcc, reply_to, attachments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
