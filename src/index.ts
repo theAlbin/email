@@ -61,5 +61,5 @@ async function getMessageListFromDB(env: Env) {
 
 	const messages = await env.EMAIL_DB.prepare(query).all();
 
-	return Response.json(messages);
+	return new Response(JSON.stringify(messages.results), { headers: { 'Content-Type': 'application/json' } });
 }
