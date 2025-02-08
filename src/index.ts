@@ -12,14 +12,16 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 
 	const email = await parser.parse(await rawEmail.arrayBuffer())
 
-	if (email.attachments) {
-		for (const attachment of email.attachments) {
-			const attachmentKey = `attachments/${email.messageId}/${attachment.contentId}${attachment.filename}`
-			await env.EMAIL_BUCKET.put(attachmentKey, attachment.content)
-		}
+	if (email.attachments && email.attachments.length > 0) {
+		await saveAttachmentsToBucket(email, env);
 	}
 
-	const query = `INSERT INTO messages (message_id, "subject", "date", "from", sender, html, text, in_reply_to, "references", delivered_to, return_path, headers, "to", cc, bcc, reply_to, attachments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	await saveMessageToDB(env, email);
+
+}
+
+async function saveMessageToDB(env: Env, email: PostalMime.Email) {
+	const query = `INSERT INTO messages (message_id, "subject", "date", "from", sender, html, text, in_reply_to, "references", delivered_to, return_path, headers, "to", cc, bcc, reply_to, attachments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
 	await env.EMAIL_DB.prepare(query
 	).bind(
@@ -40,12 +42,18 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 		JSON.stringify(email.bcc) || '',
 		JSON.stringify(email.replyTo) || '',
 		JSON.stringify(email.attachments)
-	).run()
+	).run();
+}
 
+async function saveAttachmentsToBucket(email: PostalMime.Email, env: Env) {
+	for (const attachment of email.attachments) {
+		const attachmentKey = `attachments/${email.messageId}/${attachment.contentId}${attachment.filename}`;
+		await env.EMAIL_BUCKET.put(attachmentKey, attachment.content);
+	}
 }
 
 async function handleFetch(req: Request, env: Env) {
 	const message = "Hello World!";
 
-	return Response.json(message);
+	return Response.json({ message });
 }
