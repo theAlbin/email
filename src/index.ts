@@ -61,5 +61,33 @@ async function getMessageListFromDB(env: Env) {
 
 	const messages = await env.EMAIL_DB.prepare(query).all();
 
-	return new Response(JSON.stringify(messages.results), { headers: { 'Content-Type': 'application/json' } });
+	return new Response(htmlEmailListView(messages.results), { headers: { 'Content-Type': 'text/html' } });
+}
+
+function htmlEmailListView(results: Record<string, unknown>[]): string {
+	return `
+		<!DOCTYPE html>
+		<html>
+			<head>
+				<title>Emails</title>
+			</head>
+			<body>
+				<h1>Emails</h1>
+				<ul>
+					${results.map(result => htmlEmailListItem(result)).join('')}
+				</ul>
+			</body>
+		</html>
+	`;
+}
+
+function htmlEmailListItem(result: Record<string, unknown>): string {
+	return `
+		<li>
+			<h2>${result.subject}</h2>
+			<p>From: ${result.from}</p>
+			<p>Date: ${result.date}</p>
+			<p>${result.text}</p>
+		</li>
+	`;
 }
