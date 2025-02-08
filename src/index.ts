@@ -2,6 +2,7 @@ import * as PostalMime from 'postal-mime'
 
 export default {
 	async email(message, env, ctx) { await handleEmail(message, env); },
+	async fetch(req, env, ctx) { return await handleFetch(req, env); },
 } satisfies ExportedHandler<Env>;
 
 async function handleEmail(message: ForwardableEmailMessage, env: Env) {
@@ -11,27 +12,9 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 
 	const email = await parser.parse(await rawEmail.arrayBuffer())
 
-	const messageId = email.messageId
-	const subject = email.subject || ''
-	const date = email.date || new Date().toISOString() || ''
-	const from = JSON.stringify(email.from) || ''
-	const sender = JSON.stringify(email.sender) || ''
-	const html = email.html || ''
-	const text = email.text || ''
-	const inReplyTo = email.inReplyTo || ''
-	const references = email.references || ''
-	const deliveredTo = email.deliveredTo || ''
-	const returnPath = email.returnPath || ''
-	const headers = JSON.stringify(email.headers) || ''
-	const to = JSON.stringify(email.to) || ''
-	const cc = JSON.stringify(email.cc) || ''
-	const bcc = JSON.stringify(email.bcc) || ''
-	const replyTo = JSON.stringify(email.replyTo) || ''
-	const attachments = email.attachments || []
-
-	if (attachments) {
-		for (const attachment of attachments) {
-			const attachmentKey = `attachments/${messageId}/${attachment.contentId}${attachment.filename}`
+	if (email.attachments) {
+		for (const attachment of email.attachments) {
+			const attachmentKey = `attachments/${email.messageId}/${attachment.contentId}${attachment.filename}`
 			await env.EMAIL_BUCKET.put(attachmentKey, attachment.content)
 		}
 	}
@@ -59,4 +42,10 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 		JSON.stringify(email.attachments)
 	).run()
 
+}
+
+async function handleFetch(req: Request, env: Env) {
+	const message = "Hello World!";
+
+	return Response.json(message);
 }
