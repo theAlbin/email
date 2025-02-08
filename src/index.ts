@@ -1,9 +1,7 @@
 import * as PostalMime from 'postal-mime'
 
 export default {
-	async email(message, env, ctx) {
-		await handleEmail(message, env);
-	},
+	async email(message, env, ctx) { await handleEmail(message, env); },
 } satisfies ExportedHandler<Env>;
 
 async function handleEmail(message: ForwardableEmailMessage, env: Env) {
@@ -29,12 +27,13 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 	const cc = JSON.stringify(email.cc) || ''
 	const bcc = JSON.stringify(email.bcc) || ''
 	const replyTo = JSON.stringify(email.replyTo) || ''
-	var attachments = []
+	const attachments = email.attachments || []
 
-	for (const attachment of email.attachments) {
-		const attachmentKey = `${messageId}/${attachment.filename}`
-		await env.EMAIL_BUCKET.put(attachmentKey, attachment.content)
-		attachments.push({ filename: attachment.filename, mimeType: attachment.mimeType, contentId: attachment.contentId, disposition: attachment.disposition, related: attachment.related})
+	if (attachments) {
+		for (const attachment of attachments) {
+			const attachmentKey = `attachments/${messageId}/${attachment.contentId}${attachment.filename}`
+			await env.EMAIL_BUCKET.put(attachmentKey, attachment.content)
+		}
 	}
 
 	const query = `INSERT INTO messages (message_id, "subject", "date", "from", sender, html, text, in_reply_to, "references", delivered_to, return_path, headers, "to", cc, bcc, reply_to, attachments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
