@@ -53,7 +53,13 @@ async function saveAttachmentsToBucket(email: PostalMime.Email, env: Env) {
 }
 
 async function handleFetch(req: Request, env: Env) {
-	const message = "Hello World!";
+	return await getMessageListFromDB(env);
+}
 
-	return Response.json({ message });
+async function getMessageListFromDB(env: Env) {
+	const query = `SELECT "from", "subject", "date", html, text, attachments FROM messages ORDER BY "date" DESC LIMIT 10`;
+
+	const messages = await env.EMAIL_DB.prepare(query).all();
+
+	return Response.json(messages);
 }
