@@ -57,7 +57,7 @@ async function handleFetch(req: Request, env: Env) {
 }
 
 async function getMessageListFromDB(env: Env) {
-	const query = `SELECT "subject", "date", "from", html, text, attachments FROM messages ORDER BY "date" DESC LIMIT 10`;
+	const query = `SELECT "subject", "date", "from", "to", html, text, attachments FROM messages ORDER BY "date" DESC LIMIT 10`;
 
 	const messages = await env.EMAIL_DB.prepare(query).all();
 
@@ -84,10 +84,13 @@ function htmlEmailListView(results: Record<string, unknown>[]): string {
 function htmlEmailListItem(result: Record<string, unknown>): string {
 	return `
 		<li>
-			<h2>${result.subject}</h2>
-			<p>From: ${result.from}</p>
-			<p>Date: ${result.date}</p>
-			<p>${result.html||result.text}</p>
+			<b>${result.subject}</b><br>
+			<div><b>From:</b> ${result.from}<br>
+			<b>Date:</b> ${result.date}<br>
+			<b>To:</b> ${result.from}</div>
+
+			<div>${result.html||result.text}</div>
+
 			<p>Attachments: ${result.attachments}</p>
 		</li>
 	`;
