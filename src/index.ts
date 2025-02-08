@@ -57,7 +57,7 @@ async function handleFetch(req: Request, env: Env) {
 }
 
 async function getMessageListFromDB(env: Env) {
-	const query = `SELECT "from", "subject", "date", html, text, attachments FROM messages ORDER BY "date" DESC LIMIT 10`;
+	const query = `SELECT "subject", "date", "from", html, text, attachments FROM messages ORDER BY "date" DESC LIMIT 10`;
 
 	const messages = await env.EMAIL_DB.prepare(query).all();
 
