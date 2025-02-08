@@ -40,23 +40,23 @@ async function handleEmail(message: ForwardableEmailMessage, env: Env) {
 
 	await env.EMAIL_DB.prepare(query
 	).bind(
-		messageId,
-		subject,
-		date,
-		from,
-		sender,
-		html,
-		text,
-		inReplyTo,
-		references,
-		deliveredTo,
-		returnPath,
-		headers,
-		to,
-		cc,
-		bcc,
-		replyTo,
-		JSON.stringify(attachments)
+		email.messageId,
+		email.subject || '',
+		email.date || new Date().toISOString() || '',
+		JSON.stringify(email.from) || '',
+		JSON.stringify(email.sender) || '',
+		email.html || '',
+		email.text || '',
+		email.inReplyTo || '',
+		email.references || '',
+		email.deliveredTo || '',
+		email.returnPath || '',
+		JSON.stringify(email.headers) || '',
+		JSON.stringify(email.to) || '',
+		JSON.stringify(email.cc) || '',
+		JSON.stringify(email.bcc) || '',
+		JSON.stringify(email.replyTo) || '',
+		JSON.stringify(email.attachments)
 	).run()
 
 }
