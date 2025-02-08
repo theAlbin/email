@@ -87,7 +87,8 @@ function htmlEmailListItem(result: Record<string, unknown>): string {
 			<h2>${result.subject}</h2>
 			<p>From: ${result.from}</p>
 			<p>Date: ${result.date}</p>
-			<p>${result.text}</p>
+			<p>${result.html||result.text}</p>
+			<p>Attachments: ${result.attachments}</p>
 		</li>
 	`;
 }
